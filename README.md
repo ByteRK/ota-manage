@@ -1,2 +1,2 @@
 ## About
-A NodeJS Project With Yarn
+A NodeJS Project With Yarn And TypeScript
