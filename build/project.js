@@ -2,22 +2,113 @@
 /**
  * 处理项目信息操作
  */
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getPrjList = void 0;
-const status_1 = require("./status");
+exports.getVersion = exports.addPrj = exports.getPrj = exports.getPrjList = void 0;
+const send = __importStar(require("./net"));
 const dataTable = "apps";
 // 获取项目列表
 const getPrjList = (db, res) => {
-    db.all(`SELECT id, name, version FROM ${dataTable}`, (err, rows) => {
+    db.all(`SELECT id, code, name, version FROM ${dataTable}`, (err, rows) => {
         if (err) {
-            res.json({ code: status_1.STATUSCODE.SERVERERROR, message: "服务异常", data: {} });
+            send._serverError(res);
+            return;
         }
         if (rows.length == 0) {
-            res.json({ code: status_1.STATUSCODE.NOFIND, message: "无数据", data: {} });
+            send._error(res, "无项目数据");
         }
         else {
-            res.json({ code: status_1.STATUSCODE.SUCCESS, message: "获取成功", data: { rows: rows } });
+            send._success(res, "获取项目列表成功", { list: rows });
         }
     });
 };
 exports.getPrjList = getPrjList;
+// 获取项目详细信息
+const getPrj = (db, req, res) => {
+    const id = req.query.id;
+    if (!id) {
+        send._error(res, "请传递项目编号");
+        return;
+    }
+    const query = `SELECT * FROM ${dataTable} WHERE id = ?`;
+    db.get(query, [id], (err, row) => {
+        if (err) {
+            send._serverError(res);
+            return;
+        }
+        if (row) {
+            send._success(res, "获取成功", { info: row });
+        }
+        else {
+            send._error(res, "无此项目信息");
+        }
+    });
+};
+exports.getPrj = getPrj;
+// 增加项目信息
+const addPrj = (db, req, res) => {
+    const id = req.body.id ? req.body.id : "";
+    const code = req.body.code ? req.body.code : "";
+    const name = req.body.name ? req.body.name : "";
+    const version = req.body.version ? req.body.version : "";
+    if (!id || !code || !name || !version) {
+        send._error(res, "项目信息不完整");
+        return;
+    }
+    const query = `INSERT INTO ${dataTable} (id, code, name, version) VALUES (?, ?, ?, ?);`;
+    db.run(query, [id, code, name, version], (err) => {
+        if (err) {
+            send._serverError(res, "项目增加失败，请检查项目ID是否重复");
+            return;
+        }
+        else {
+            send._success(res, "项目增加成功");
+        }
+    });
+};
+exports.addPrj = addPrj;
+// 获取指定项目的信息
+const getVersion = (db, req, res) => {
+    // console.log(req);
+    const id = req.query.id;
+    if (!id) {
+        send._error(res, "请传递项目编号");
+        return;
+    }
+    const query = `SELECT version FROM ${dataTable} WHERE id = ?`;
+    db.get(query, [id], (err, row) => {
+        if (err) {
+            send._serverError(res);
+            return;
+        }
+        if (row) {
+            send._success(res, "获取成功", { version: row.version, url: `${req.baseUrl}/getPack/${id}/update.tar.gz` });
+        }
+        else {
+            send._error(res, "无此项目信息");
+        }
+    });
+};
+exports.getVersion = getVersion;

@@ -29,25 +29,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const fs_1 = __importDefault(require("fs"));
-// 库
-const sqlite3 = require("sqlite3").verbose();
-// 函数
-const status_1 = require("./status");
-const userFun = __importStar(require("./user"));
-const prjFun = __importStar(require("./project"));
-// 检测请求头
-function checkHeader(req, res, next) {
-    if (/^\/download\//.test(req.path) || req.path === '/login') {
-        return next();
-    }
-    if (req.headers['coffee']) {
-        next();
-    }
-    else {
-        res.json({ code: status_1.STATUSCODE.IMRICKEN, message: "拒绝用茶壶冲咖啡!" });
-    }
-}
-// 这里可以执行其他操作以清理和关闭应用程序
+const send = __importStar(require("./net"));
+const upload_1 = require("./upload");
+const request_1 = require("./request");
+// 异常捕获
 process.on('uncaughtException', error => {
     console.error(`未捕获的异常：${error.stack}`);
     const logStream = fs_1.default.createWriteStream('error.log', { flags: 'a' });
@@ -55,30 +40,53 @@ process.on('uncaughtException', error => {
     logStream.write(`${timestamp}: Error occurred - ${error.message}\n`);
     // process.exit(1) // 终止应用程序进程
 });
+function skipCheck(req) {
+    // if (/^\/download\//.test(req.url)) return true;
+    if (req.path === "/download")
+        return true;
+    if (req.path === "/login")
+        return true;
+    if (req.path === "/getVersion")
+        return true;
+    if (req.path === "/getPack")
+        return true;
+    return false;
+}
+// 请求预检查
+function checkRequest(req, res, next) {
+    if (skipCheck(req)) {
+        next();
+        return;
+    }
+    if (req.path === "/upload") {
+        if ((0, upload_1.uploadCheck)(req, res))
+            next();
+        return;
+    }
+    ;
+    if (req.headers['coffee']) {
+        next();
+    }
+    else {
+        send._coofee(res);
+    }
+}
 // 创建数据库连接
+const sqlite3 = require("sqlite3").verbose();
 const db = new sqlite3.Database("./database/sanboen-ota.db");
+// 配置服务器信息
 const server = (0, express_1.default)();
 const port = 3007;
-server.use((0, cors_1.default)()); // 开启跨域访问
 // 处理 POST 请求的中间件
-server.use(express_1.default.json());
-server.use(checkHeader);
-// 登录验证路由
-server.post("/login", (req, res) => {
-    console.log(req.headers);
-    const { username, password } = req.body;
-    userFun.login(db, res, username, password);
+server.use((0, cors_1.default)()); // 开启跨域访问
+server.use(express_1.default.json()); // 使用JSON
+server.use(checkRequest); // 处理请求前对请求进行检查
+// 处理文件上传的路由
+server.post('/upload', upload_1.upload.single('file'), (req, res) => {
+    // console.log(req);
+    send._success(res, "上传成功", {});
 });
-server.post("/adduser", (req, res) => {
-    const { username, password } = req.body;
-    userFun.addUser(db, res, username, password);
-});
-// 处理未监听的URL
-server.all("*", (req, res) => {
-    prjFun.getPrjList(db, res);
-    // res.json({ code: 666, message: "你踏入了新大陆" });
-});
+// 所有请求交给reqDeal处理
+server.all("*", (req, res) => { (0, request_1.reqDeal)(db, req, res); });
 // 启动服务器
-server.listen(port, () => {
-    console.log(`Server listening at http://localhost:${port}`);
-});
+server.listen(port, () => { console.log(`Server listening at http://localhost:${port}`); });

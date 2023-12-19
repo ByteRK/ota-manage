@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deal = void 0;
 // 状态枚举
 const status_1 = require("./status");
-const showCoofee = (res) => { res.json({ code: status_1.STATUSCODE.IMRICKEN, message: "拒绝用茶壶冲咖啡!" }); };
+const sendCoofee = (res) => { res.json({ code: status_1.STATUSCODE.IMRICKEN, message: "拒绝用茶壶冲咖啡!" }); };
 const dealNewPacket = (req, res) => {
 };
 const dealPost = (req, res) => {
@@ -14,7 +14,7 @@ const dealPost = (req, res) => {
         case "/login":
             break;
         default:
-            showCoofee(res);
+            sendCoofee(res);
             break;
     }
 };
@@ -23,7 +23,7 @@ const dealGet = (req, res) => {
         case "/login":
             break;
         default:
-            showCoofee(res);
+            sendCoofee(res);
             break;
     }
 };
@@ -34,7 +34,7 @@ const deal = (req, res) => {
         dealGet(req, res);
     }
     else {
-        showCoofee(res);
+        sendCoofee(res);
     }
 };
 exports.deal = deal;
