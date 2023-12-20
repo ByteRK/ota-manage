@@ -4,6 +4,7 @@ import path from "path";
 import cors from 'cors';
 import fs from 'fs';
 
+import { port, host } from "./config";
 import * as send from "./net";
 import { uploadCheck, upload } from "./upload";
 import { reqDeal } from "./request";
@@ -44,7 +45,6 @@ const db = new sqlite3.Database("./database/sanboen-ota.db");
 
 // 配置服务器信息
 const server = express();
-const port = 3007;
 
 // 处理 POST 请求的中间件
 server.use(cors());            // 开启跨域访问
@@ -53,7 +53,6 @@ server.use(checkRequest)       // 处理请求前对请求进行检查
 
 // 处理文件上传的路由
 server.post('/upload', upload.single('file'), (req: any, res: any) => {
-    // console.log(req);
     send._success(res, "上传成功", {});
 });
 

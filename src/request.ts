@@ -15,8 +15,6 @@ const dealMoreSupport = (db: any, req: any, res: any) => {
         case "/login": {
             userFun.login(db, req, res);
         } return true;
-
-
         case "/adduser": {
             userFun.addUser(db, req, res);
         } return true;
@@ -30,6 +28,9 @@ const dealMoreSupport = (db: any, req: any, res: any) => {
 // 处理未处理的Post请求
 const dealPost = (db: any, req: any, res: any) => {
     switch (req.path) {
+        case "/updatePrj":
+            prjFun.updatePrj(db, req, res);
+            return;
         case "/addPrj":
             prjFun.addPrj(db, req, res);
             return;
@@ -51,6 +52,9 @@ const dealGet = (db: any, req: any, res: any) => {
             return;
         case "/getVersion":
             prjFun.getVersion(db, req, res);
+            return;
+        case "/getPack":
+            prjFun.getPack(db, req, res);
             return;
         default:
             send._coofee(res);

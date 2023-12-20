@@ -52,6 +52,9 @@ const dealMoreSupport = (db, req, res) => {
 // 处理未处理的Post请求
 const dealPost = (db, req, res) => {
     switch (req.path) {
+        case "/updatePrj":
+            prjFun.updatePrj(db, req, res);
+            return;
         case "/addPrj":
             prjFun.addPrj(db, req, res);
             return;
@@ -71,6 +74,9 @@ const dealGet = (db, req, res) => {
             return;
         case "/getVersion":
             prjFun.getVersion(db, req, res);
+            return;
+        case "/getPack":
+            prjFun.getPack(db, req, res);
             return;
         default:
             send._coofee(res);

@@ -43,12 +43,12 @@ function generateFilename(file: any) {
 const storage = multer.diskStorage({
     destination: (req: any, file: any, cb: any) => {
         const savePath = determineSavePath(req.query);
-        console.log(savePath);
+        // console.log(savePath);
         cb(null, savePath);
     },
     filename: (req: any, file: any, cb: any) => {
         const filename = generateFilename(file);
-        console.log(filename);
+        // console.log(filename);
         cb(null, filename);
     },
 });
